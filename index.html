@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permit Drawing Services - Instant Quote Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+            --error: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .quote-result {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .total-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .reference-number {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pac-container {
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Instant Permit Drawing Quote</h1>
+            <p>Get an accurate estimate for your permit drawing services in seconds</p>
+        </header>
+        
+        <div class="card">
+            <form id="quoteForm">
+                <div class="form-group">
+                    <label for="address">Full Address</label>
+                    <input type="text" id="address" class="form-control" placeholder="Start typing your address" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="projectType">Project Type</label>
+                            <select id="projectType" class="form-control" required>
+                                <option value="">Select Project Type</option>
+                                <option value="basement">Basement</option>
+                                <option value="deck">Deck</option>
+                                <option value="commercial">Commercial Interior</option>
+                                <option value="changeOfUse">Change of Use</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="propertySize">Property Size (sq ft)</label>
+                            <input type="number" id="propertySize" class="form-control" placeholder="e.g., 1000" min="1" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="scope">Scope of Work</label>
+                            <select id="scope" class="form-control" required>
+                                <option value="">Select Scope</option>
+                                <option value="renovation">Renovation</option>
+                                <option value="newConstruction">New Construction</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="timeline">Timeline Needed</label>
+                            <select id="timeline" class="form-control" required>
+                                <option value="">Select Timeline</option>
+                                <option value="standard">Standard: 2–3 weeks</option>
+                                <option value="rushed">Rushed: 5–7 days (+15%)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" class="form-control" placeholder="Your full name" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" placeholder="your.email@example.com" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number (optional)</label>
+                    <input type="tel" id="phone" class="form-control" placeholder="(123) 456-7890">
+                </div>
+                
+                <button type="submit" class="btn btn-block">Get Instant Quote</button>
+            </form>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p>Calculating your quote...</p>
+        </div>
+        
+        <div class="card quote-result" id="quoteResult">
+            <h2>Your Quote Estimate</h2>
+            <div class="reference-number" id="referenceNumber">Q-20250828-001</div>
+            
+            <div class="total-price" id="totalPrice">$0.00</div>
+            
+            <h3>Price Breakdown</h3>
+            <div class="breakdown-list" id="breakdownList">
+                <!-- Breakdown items will be inserted here -->
+            </div>
+            
+            <div class="thank-you-message">
+                <p>We've received your request. A team member will follow up soon to confirm your quote and discuss next steps.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base pricing structure
+        const basePrices = {
+            basement: 1495,
+            deck: 995,
+            commercial: 2495,
+            changeOfUse: 2995
+        };
+        
+        // Add-on prices per extra 500 sq ft
+        const addOnPrices = {
+            basement: 250,
+            deck: 0,
+            commercial: 400,
+            changeOfUse: 500
+        };
+        
+        // GTA cities (no location modifier)
+        const gtaCities = [
+            'toronto', 'mississauga', 'brampton', 'vaughan', 'markham',
+            'richmond hill', 'oakville', 'burlington', 'ajax', 'pickering',
+            'whitby', 'oshawa', 'newmarket', 'aurora', 'king city'
+        ];
+        
+        // Initialize variables
+        let quoteSubmissions = JSON.parse(localStorage.getItem('quoteSubmissions')) || [];
+        let submissionCount = parseInt(localStorage.getItem('submissionCount')) || 1;
+        
+        // Initialize Google Places Autocomplete
+        function initAutocomplete() {
+            const addressInput = document.getElementById('address');
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'ca' }
+            });
+            
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                // You can extract additional place details here if needed
+            });
+        }
+        
+        // Calculate the quote based on form inputs
+        function calculateQuote(formData) {
+            let basePrice = basePrices[formData.projectType];
+            let totalPrice = basePrice;
+            let breakdown = [
+                { description: `Base price for ${formData.projectType}`, amount: basePrice }
+            ];
+            
+            // Calculate size add-ons
+            const size = parseInt(formData.propertySize);
+            if (size > 1000) {
+                const extraSqft = size - 1000;
+                const addOnUnits = Math.ceil(extraSqft / 500);
+                const addOnPrice = addOnPrices[formData.projectType] * addOnUnits;
+                
+                if (addOnPrice > 0) {
+                    breakdown.push({ 
+                        description: `Size add-on (${extraSqft} extra sq ft)`, 
+                        amount: addOnPrice 
+                    });
+                    totalPrice += addOnPrice;
+                }
+            }
+            
+            // Apply scope modifier
+            if (formData.scope === 'newConstruction') {
+                let scopeModifier = 0;
+                if (formData.projectType === 'basement') scopeModifier = 0.2;
+                if (formData.projectType === 'commercial') scopeModifier = 0.25;
+                
+                if (scopeModifier > 0) {
+                    const scopeAmount = totalPrice * scopeModifier;
+                    breakdown.push({ 
+                        description: `New construction premium (${scopeModifier * 100}%)`, 
+                        amount: scopeAmount 
+                    });
+                    totalPrice += scopeAmount;
+                }
+            }
+            
+            // Apply location modifier
+            const city = extractCityFromAddress(formData.address);
+            const isGTALocation = gtaCities.includes(city.toLowerCase());
+            let locationModifier = 0;
+            
+            if (!isGTALocation) {
+                locationModifier = 0.3;
+                const locationAmount = totalPrice * locationModifier;
+                breakdown.push({ 
+                    description: `Non-GTA location premium (30%)`, 
+                    amount: locationAmount 
+                });
+                totalPrice += locationAmount;
+            }
+            
+            // Apply rush fee if needed
+            if (formData.timeline === 'rushed') {
+                const rushAmount = totalPrice * 0.15;
+                breakdown.push({ 
+                    description: `Rushed timeline fee (15%)`, 
+                    amount: rushAmount 
+                });
+                totalPrice += rushAmount;
+            }
+            
+            return {
+                total: Math.round(totalPrice),
+                breakdown: breakdown
+            };
+        }
+        
+        // Extract city from address string
+        function extractCityFromAddress(address) {
+            // This is a simplified implementation
+            // In a real application, you might use more sophisticated parsing
+            // or get this information from the Places API details
+            const addressParts = address.split(',');
+            if (addressParts.length >= 2) {
+                return addressParts[addressParts.length - 2].trim();
+            }
+            return address;
+        }
+        
+        // Generate a unique reference number
+        function generateReferenceNumber() {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            const refNum = `Q-${dateStr}-${submissionCount.toString().padStart(3, '0')}`;
+            submissionCount++;
+            localStorage.setItem('submissionCount', submissionCount);
+            return refNum;
+        }
+        
+        // Store submission in localStorage
+        function storeSubmission(formData, quote, referenceNumber) {
+            const submission = {
+                timestamp: new Date().toISOString(),
+                reference: referenceNumber,
+                ...formData,
+                quote: quote.total
+            };
+            
+            quoteSubmissions.push(submission);
+            localStorage.setItem('quoteSubmissions', JSON.stringify(quoteSubmissions));
+            
+            // In a real application, you would also send this data to a server
+            console.log('Submission stored:', submission);
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-CA', { 
+                style: 'currency', 
+                currency: 'CAD' 
+            }).format(amount);
+        }
+        
+        // Display the quote result
+        function displayQuoteResult(quote, referenceNumber) {
+            const totalElement = document.getElementById('totalPrice');
+            const referenceElement = document.getElementById('referenceNumber');
+            const breakdownElement = document.getElementById('breakdownList');
+            
+            totalElement.textContent = formatCurrency(quote.total);
+            referenceElement.textContent = referenceNumber;
+            
+            // Build breakdown HTML
+            breakdownElement.innerHTML = '';
+            quote.breakdown.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'breakdown-item';
+                itemElement.innerHTML = `
+                    <span>${item.description}</span>
+                    <span>${formatCurrency(item.amount)}</span>
+                `;
+                breakdownElement.appendChild(itemElement);
+            });
+            
+            // Add total item
+            const totalItemElement = document.createElement('div');
+            totalItemElement.className = 'breakdown-item';
+            totalItemElement.innerHTML = `
+                <span>Total Estimate</span>
+                <span>${formatCurrency(quote.total)}</span>
+            `;
+            breakdownElement.appendChild(totalItemElement);
+            
+            // Show result section
+            document.getElementById('quoteResult').style.display = 'block';
+        }
+        
+        // Handle form submission
+        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading indicator
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Simulate processing time (for demonstration only)
+            setTimeout(function() {
+                // Collect form data
+                const formData = {
+                    address: document.getElementById('address').value,
+                    projectType: document.getElementById('projectType').value,
+                    propertySize: document.getElementById('propertySize').value,
+                    scope: document.getElementById('scope').value,
+                    timeline: document.getElementById('timeline').value,
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value
+                };
+                
+                // Calculate quote
+                const quote = calculateQuote(formData);
+                
+                // Generate reference number
+                const referenceNumber = generateReferenceNumber();
+                
+                // Store submission
+                storeSubmission(formData, quote, referenceNumber);
+                
+                // Display results
+                displayQuoteResult(quote, referenceNumber);
+                
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                // Scroll to results
+                document.getElementById('quoteResult').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            }, 1500);
+        });
+        
+        // Initialize the application
+        window.onload = function() {
+            // Note: In a real implementation, you would load the Google Maps API with your key
+            // For now, we'll simulate the initialization
+            console.log("App initialized. Google Maps would load here with a valid API key.");
+            
+            // For demonstration, we'll simulate the autocomplete initialization
+            // In a real app, you would call: initAutocomplete();
+        };
+    </script>
+
+    <!-- Google Maps API would be loaded here with a valid API key -->
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initAutocomplete" async defer></script> -->
+</body>
+</html>
