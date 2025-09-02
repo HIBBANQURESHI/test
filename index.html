@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Permit Drawing Services - Instant Quote Tool</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
     <style>
         :root {
             --primary: #3498db;
@@ -166,11 +167,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .pac-container {
+        .mapboxgl-ctrl-geocoder {
             border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
             border: none;
             margin-top: 5px;
+            width: 100% !important;
+            max-width: none !important;
         }
         
         .loading {
@@ -216,7 +219,7 @@
             <form id="quoteForm">
                 <div class="form-group">
                     <label for="address">Full Address</label>
-                    <input type="text" id="address" class="form-control" placeholder="Start typing your address" required>
+                    <div id="geocoder" class="geocoder"></div>
                 </div>
                 
                 <div class="form-row">
@@ -309,7 +312,12 @@
         </div>
     </div>
 
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
     <script>
+        // Set your Mapbox access token
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaGliYmFuIiwiYSI6ImNtZjJ1ejZ1NzBhamoyanNkc3lyZnBpc3UifQ.Ld2z7uAkqf3XNnW0CLyh1Q';
+        
         // Base pricing structure
         const basePrices = {
             basement: 1495,
@@ -336,18 +344,28 @@
         // Initialize variables
         let quoteSubmissions = JSON.parse(localStorage.getItem('quoteSubmissions')) || [];
         let submissionCount = parseInt(localStorage.getItem('submissionCount')) || 1;
+        let selectedAddress = '';
         
-        // Initialize Google Places Autocomplete
-        function initAutocomplete() {
-            const addressInput = document.getElementById('address');
-            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-                types: ['address'],
-                componentRestrictions: { country: 'ca' }
+        // Initialize Mapbox Geocoder
+        function initMapboxGeocoder() {
+            const geocoder = new MapboxGeocoder({
+                accessToken: mapboxgl.accessToken,
+                types: 'address',
+                countries: 'ca',
+                placeholder: 'Start typing your address',
+                marker: false,
+                collapsed: false
             });
             
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                // You can extract additional place details here if needed
+            geocoder.addTo('#geocoder');
+            
+            geocoder.on('result', function(e) {
+                selectedAddress = e.result.place_name;
+                console.log('Selected address:', selectedAddress);
+            });
+            
+            geocoder.on('clear', function() {
+                selectedAddress = '';
             });
         }
         
@@ -426,7 +444,7 @@
         function extractCityFromAddress(address) {
             // This is a simplified implementation
             // In a real application, you might use more sophisticated parsing
-            // or get this information from the Places API details
+            // or get this information from the geocoder response
             const addressParts = address.split(',');
             if (addressParts.length >= 2) {
                 return addressParts[addressParts.length - 2].trim();
@@ -506,6 +524,12 @@
         document.getElementById('quoteForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Validate address was selected
+            if (!selectedAddress) {
+                alert('Please select a valid address from the suggestions');
+                return;
+            }
+            
             // Show loading indicator
             document.getElementById('loadingIndicator').style.display = 'block';
             
@@ -513,7 +537,7 @@
             setTimeout(function() {
                 // Collect form data
                 const formData = {
-                    address: document.getElementById('address').value,
+                    address: selectedAddress,
                     projectType: document.getElementById('projectType').value,
                     propertySize: document.getElementById('propertySize').value,
                     scope: document.getElementById('scope').value,
@@ -547,16 +571,8 @@
         
         // Initialize the application
         window.onload = function() {
-            // Note: In a real implementation, you would load the Google Maps API with your key
-            // For now, we'll simulate the initialization
-            console.log("App initialized. Google Maps would load here with a valid API key.");
-            
-            // For demonstration, we'll simulate the autocomplete initialization
-            // In a real app, you would call: initAutocomplete();
+            initMapboxGeocoder();
         };
     </script>
-
-    <!-- Google Maps API would be loaded here with a valid API key -->
-    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initAutocomplete" async defer></script> -->
 </body>
 </html>
